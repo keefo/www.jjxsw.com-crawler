@@ -12,6 +12,7 @@ from scrapy.utils.response import get_base_url
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor as sle
 from scrapy.item import Item, Field
+from os.path import exists
 
 class TxtItem(Item):
     name = Field()
@@ -23,15 +24,20 @@ class BlogSpider(scrapy.Spider):
  
 
     def parse(self, response):
-        items = []
         for link in response.xpath("//a[starts-with(@href, '/txt/')]"):
              item = TxtItem()
-             name = link.xpath('text()').extract_first();
-             item['name'] = name
-             item['url'] = link.xpath('@href').extract()
-             items.append(item)
-             print(item)
-             yield response.follow(link, self.parse_book_page, meta={'name': name})
+             name = link.xpath('text()').extract_first()
+             url = link.xpath('@href').extract_first()
+             if name is None or url is None:
+                continue
+             
+             if not url.endswith(".htm"):
+                yield response.follow(link, self.parse)
+                continue
+
+             path = "books/"+name+".txt"
+             if not exists(path):
+                 yield response.follow(link, self.parse_book_page, meta={'name': name})
              
     def parse_book_page(self, response):
         for link in response.xpath("//li[@class='downAddress_li']/a"):
