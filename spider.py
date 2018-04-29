@@ -1,21 +1,10 @@
 import scrapy
-import re
-import json
 import os.path
 
-from scrapy.selector import Selector
-try:
-    from scrapy.spiders import Spider
-except:
-    from scrapy.spiders import BaseSpider as Spider
-from scrapy.utils.response import get_base_url
-from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors import LinkExtractor as sle
-from scrapy.item import Item, Field
 from os.path import exists
 
-class BlogSpider(scrapy.Spider):
-    name = 'blogspider'
+class JJSpider(scrapy.Spider):
+    name = 'jjspider'
     start_urls = ['http://www.jjxsw.com/']
  
     if not os.path.exists("books"):
@@ -38,7 +27,6 @@ class BlogSpider(scrapy.Spider):
              
     def parse_book_page(self, response):
         for link in response.xpath("//li[@class='downAddress_li']/a"):
-            yield {'download': link.extract()}
             yield response.follow(link, self.parse_download_page, meta=response.meta)
             break
     
@@ -46,9 +34,8 @@ class BlogSpider(scrapy.Spider):
         for link in response.css("a.green"):
             title = link.xpath("text()").extract_first()
             if title.startswith( 'TXT电子书下载地' ):
-                yield {'final_download': link.extract()}
+                yield {'download_link': link.extract()}
                 yield response.follow(link, self.save_text, meta=response.meta)                
-                #return link
                 break
 
     def save_text(self, response):
