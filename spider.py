@@ -14,18 +14,15 @@ from scrapy.linkextractors import LinkExtractor as sle
 from scrapy.item import Item, Field
 from os.path import exists
 
-class TxtItem(Item):
-    name = Field()
-    url = Field()
-
 class BlogSpider(scrapy.Spider):
     name = 'blogspider'
     start_urls = ['http://www.jjxsw.com/']
  
+    if not os.path.exists("books"):
+        os.makedirs("books")
 
     def parse(self, response):
         for link in response.xpath("//a[starts-with(@href, '/txt/')]"):
-             item = TxtItem()
              name = link.xpath('text()').extract_first()
              url = link.xpath('@href').extract_first()
              if name is None or url is None:
